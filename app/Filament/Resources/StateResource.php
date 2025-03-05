@@ -31,18 +31,22 @@ class StateResource extends Resource
                 ->required(),
         ]);
     }
-
+    
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')->sortable(),
+                Tables\Columns\TextColumn::make('country.name') // Adding country name
+                    ->label('Country')
+                    ->sortable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(), // Adding delete action
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -50,7 +54,7 @@ class StateResource extends Resource
                 ]),
             ]);
     }
-
+    
     public static function getRelations(): array
     {
         return [
