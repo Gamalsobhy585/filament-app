@@ -1,27 +1,47 @@
 <?php
-
 namespace App\Filament\Resources;
-
 use App\Filament\Resources\EmployeeResource\Pages;
-use App\Filament\Resources\EmployeeResource\RelationManagers;
 use App\Models\Employee;
 use Filament\Forms;
+use Filament\Forms\Components\Builder;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Infolists\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+use Illuminate\Database\Eloquent\Model;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
+use Filament\Tables\Filters\SelectFilter;
 class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $slug='employees';
+    protected static ?string $navigationGroup = 'Employee Management';
 
+    public static function getGlobalSearchResultTitle(Model $record): string
+    {
+        return $record->last_name;
+    }
+
+    public static function getGlobalSearchEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return static::getGlobalSearchEloquentQuery()->with(['country']);
+    }
+
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function  getNavigationBadgeColor(): string|array|null
+    {
+        return 'warning';
+    }
     public static function form(Form $form): Form
     {
         return $form->schema([
@@ -32,8 +52,6 @@ class EmployeeResource extends Resource
             Forms\Components\TextInput::make('zipcode')->maxLength(10)->required(),
             Forms\Components\DatePicker::make('date_of_birth')->required()->native(false),
             Forms\Components\DatePicker::make('date_of_hired')->required()->native(false),
-    
-            // Country Select
             Forms\Components\Select::make('country_id')
                 ->relationship('country', 'name')
                 ->required()
@@ -43,8 +61,6 @@ class EmployeeResource extends Resource
                 ->live()
                 ->afterStateUpdated(fn(Set $set) => $set('state_id', null))
                 ->afterStateUpdated(fn(Set $set) => $set('city_id', null)),
-    
-            // State Select (Filtered by Country)
             Forms\Components\Select::make('state_id')
                 ->relationship('state', 'name')
                 ->required()
@@ -57,8 +73,6 @@ class EmployeeResource extends Resource
                 )
                 ->live()
                 ->afterStateUpdated(fn(Set $set) => $set('city_id', null)),
-    
-            // City Select (Filtered by State)
             Forms\Components\Select::make('city_id')
                 ->relationship('city', 'name')
                 ->required()
@@ -70,8 +84,6 @@ class EmployeeResource extends Resource
                         : []
                 )
                 ->live(),
-    
-            // Department Select
             Forms\Components\Select::make('department_id')
                 ->relationship('department', 'name')
                 ->required()
@@ -79,8 +91,6 @@ class EmployeeResource extends Resource
                 ->searchable(),
         ]);
     }
-    
-
     public static function table(Table $table): Table
     {
         return $table
@@ -88,47 +98,39 @@ class EmployeeResource extends Resource
                 Tables\Columns\TextColumn::make('first_name')
                     ->label('First Name')
                     ->sortable()
-                    ->searchable(),
-    
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('middle_name')
                     ->label('Middle Name')
                     ->sortable()
-                    ->searchable(),
-    
+                    ->searchable()->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('last_name')
                     ->label('Last Name')
                     ->sortable()
-                    ->searchable(),
-    
+                    ->searchable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('address')
                     ->label('Address')
                     ->sortable()
-                    ->searchable(),
-    
-               
-    
+                    ->searchable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('country.name')
                     ->label('Country')
                     ->sortable()
-                    ->searchable(),
-    
+                    ->searchable()->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('state.name')
                     ->label('State')
                     ->sortable()
-                    ->searchable(),
-    
+                    ->searchable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('city.name')
                     ->label('City')
                     ->sortable()
-                    ->searchable(),
-    
+                    ->searchable()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('department.name')
                     ->label('Department')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
-                //
+                SelectFilter::make('Department')->relationship('department', 'name')->searchable()->preload(),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -141,15 +143,11 @@ class EmployeeResource extends Resource
                 ]),
             ]);
     }
-    
-
     public static function getRelations(): array
     {
         return [
-            //
         ];
     }
-
     public static function getPages(): array
     {
         return [
@@ -158,5 +156,25 @@ class EmployeeResource extends Resource
             'view' => Pages\ViewEmployee::route('/{record}'),
             'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
+    }
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Employee Information')
+                ->schema([
+                    TextEntry::make('first_name')->label('First Name'),
+                    TextEntry::make('middle_name')->label('Middle Name'),
+                    TextEntry::make('last_name')->label('Last Name'),
+                    TextEntry::make('address')->label('Address'),
+                    TextEntry::make('zipcode')->label('Zipcode'),
+                    TextEntry::make('date_of_birth')->label('Date of Birth'),
+                    TextEntry::make('date_of_hired')->label('Date of Hired'),
+                    TextEntry::make('country.name')->label('Country'),
+                    TextEntry::make('state.name')->label('State'),
+                    TextEntry::make('city.name')->label('City'),
+                    TextEntry::make('department.name')->label('Department'),
+                ]),
+            ]);
     }
 }

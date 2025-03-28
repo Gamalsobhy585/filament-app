@@ -3,15 +3,16 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CountryResource\Pages;
-use App\Filament\Resources\CountryResource\RelationManagers;
+use App\Filament\Resources\CountryResource\RelationManagers\StatesRelationManager;
 use App\Models\Country;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CountryResource extends Resource
 
@@ -21,6 +22,8 @@ class CountryResource extends Resource
     protected static ?string $model = Country::class;
     protected static ?string $navigationIcon = 'heroicon-o-flag';
     protected static ?string $slug='countries';
+    protected static ?string $navigationGroup = 'System Management';
+
 
     public static function form(Form $form): Form
     {
@@ -32,7 +35,7 @@ class CountryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('name')->sortable(),
+            Tables\Columns\TextColumn::make('name')->sortable()->searchable(),
         ]);
     }
 
@@ -41,7 +44,7 @@ class CountryResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            StatesRelationManager::class,
         ];
     }
 
@@ -53,4 +56,20 @@ class CountryResource extends Resource
             'edit' => Pages\EditCountry::route('/{record}/edit'),
         ];
     }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Country Information')
+                ->schema([
+                    TextEntry::make('name')->label('Country Name'),
+                    TextEntry::make('code')->label('Country Code'),
+                    TextEntry::make('phonecode')->label('Phone Code'),
+                ]),
+            ]);
+    }
+
+
+    
 }

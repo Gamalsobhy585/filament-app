@@ -1,7 +1,5 @@
 <?php
-
 namespace App\Providers\Filament;
-
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -17,7 +15,6 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -27,16 +24,22 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->profile()
             ->font('Rajdhani')
             ->colors([
-                'danger' => Color::Red,        // Strong & clear for errors
-                'gray' => Color::Slate,     // Neutral & modern for subtle elements
-                'info' => Color::Sky,          // Lighter blue for better readability
-                'primary' => Color::Violet,    // More modern & vibrant than Indigo
-                'success' => Color::Green,     // Classic green for success
-                'warning' => Color::Amber,     // Warmer & softer than Orange
+                'danger' => Color::Red,        
+                'gray' => Color::Slate,     
+                'info' => Color::Sky,          
+                'primary' => Color::Violet,    
+                'success' => Color::Green,     
+                'warning' => Color::Amber,     
             ])
             ->favicon(asset('images/images.png'))    
+            ->navigationGroups([
+                'Employee Management',
+                'System Management',
+                'User Management'
+            ])
             ->brandLogo(asset('images/images.png'))        
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -63,4 +66,6 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ]);
     }
+
+
 }
